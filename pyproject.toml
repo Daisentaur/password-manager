@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "basic-password-manager"
+version = "0.1.0"
+description = "Local encrypted password manager that lives in your terminal"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "argon2-cffi",
+    "cryptography",
+]
+
+[project.scripts]
+pw = "pw_manager.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Daisentaur/password-manager"
