@@ -31,12 +31,23 @@ For development: `python3 -m venv venv && ./venv/bin/pip install -e .`
 
 ## Usage
 
+Run `pw` with no arguments for the interactive TUI: unlock, then `/` to
+filter, Enter to copy the selected password, `n` to add, `e` to edit,
+`d` to delete, `t` to switch themes (persisted across runs), `q` to quit.
+The bundled themes — muted-slate (default), dawn, matrix — are borrowed with
+admiration from [tuxedo](https://github.com/webstonehq/tuxedo); Textual's
+built-in themes are in the picker too.
+
+Or use the subcommands:
+
 | Command | What it does |
 |---|---|
 | `pw init` | create a new empty vault |
 | `pw add github` | store an entry (prompts for username/password/notes) |
 | `pw add github --gen` | same, but generates a strong random password |
 | `pw get github` | copy the password to the clipboard, show the username |
+| `pw edit github` | update an entry field by field (Enter keeps current) |
+| `pw passwd` | change the master password |
 | `pw ls` | list entry names |
 | `pw rm github` | delete an entry |
 | `pw find bank` | search entry names, usernames, and notes |
@@ -96,7 +107,11 @@ can't destroy the vault.
 Your master password is never stored anywhere, in any form. "Wrong password"
 is detected purely by GCM authentication failing.
 
-### 3. `cli.py` — the CLI
+### 3. `cli.py` and `tui.py` — the interfaces
+
+Both are thin skins over the same two modules — `tui.py` (built with
+[Textual](https://textual.textualize.io)) holds the decrypted entries in
+memory for the session; the CLI re-derives the key per command.
 
 argparse subcommands over the two modules above. Passwords are copied to the
 clipboard (`wl-copy`/`xclip`/`xsel`, whichever exists) rather than printed,

@@ -63,6 +63,25 @@ pw ls            (shows every name in the box)
 pw find bank     (searches names, usernames, and your notes)
 ```
 
+**Change a stored password** (say, after a website makes you reset it):
+
+```
+pw edit netflix
+```
+
+It shows each detail and asks what to change — just press Enter to keep
+something as it is.
+
+**Change your master password:**
+
+```
+pw passwd
+```
+
+You need the current one to do this — it re-locks the whole box with the new
+one. (This is *changing* it, not recovering it — a forgotten master password
+is still gone for good.)
+
 **Store things that aren't passwords** — WiFi keys, recovery codes, a PIN:
 run `pw add wifi-home` and put the secret in the password prompt or the
 notes.
@@ -100,5 +119,21 @@ notes.
 
 More detail in the README's troubleshooting section.
 
-*(A point-and-choose terminal interface — no commands to remember — is
-planned; this guide will grow a section for it.)*
+## The visual interface
+
+Don't want to remember commands? Just run `pw` with nothing after it. It asks
+for your master password, then shows all your entries in a table:
+
+- **type `/`** and start typing to filter the list as you type
+- **arrow keys** move, **Enter** copies the selected password to the clipboard
+- **n** adds a new entry (leave the password box empty and it invents a
+  strong one for you)
+- **e** edits the selected entry — everything is prefilled; leave the
+  password box empty to keep the old password
+- **d** deletes the selected entry (asks first)
+- **t** opens the theme picker — pick with arrows, Enter applies, and your
+  choice is remembered next time
+- **q** quits
+
+Every key is also listed in the bar at the bottom of the screen, so there's
+nothing to memorize.

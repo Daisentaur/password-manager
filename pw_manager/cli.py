@@ -84,6 +84,34 @@ def cmd_get(args):
         print(f"password: {e['pw']}")
 
 
+def cmd_edit(args):
+    """Per-field update; Enter keeps the shown current value."""
+    master = ask_master()
+    entries = vault.load(VAULT_PATH, master)
+    if args.name not in entries:
+        sys.exit(f"no entry '{args.name}' — try 'ls'")
+    e = entries[args.name]
+    user = input(f"username [{e['user']}]: ") or e["user"]
+    pw = getpass.getpass("password (empty = keep current): ") or e["pw"]
+    notes = input(f"notes [{e.get('notes', '')}]: ") or e.get("notes", "")
+    entries[args.name] = {"user": user, "pw": pw, "notes": notes}
+    vault.save(VAULT_PATH, master, entries)
+    print(f"updated '{args.name}'")
+
+
+def cmd_passwd(args):
+    """Change the master password: decrypt with old, re-encrypt with new."""
+    entries = vault.load(VAULT_PATH, ask_master())
+    print("choose a new master password")
+    new = getpass.getpass("new master password: ")
+    if getpass.getpass("confirm new master password: ") != new:
+        sys.exit("passwords do not match")
+    if len(new) < 8:
+        sys.exit("master password must be at least 8 characters")
+    vault.save(VAULT_PATH, new, entries)
+    print("master password changed (old one is now useless)")
+
+
 def cmd_ls(args):
     entries = vault.load(VAULT_PATH, ask_master())
     for name in sorted(entries):
@@ -142,8 +170,10 @@ def cmd_import(args):
 
 
 def main():
-    p = argparse.ArgumentParser(description="local encrypted password manager")
-    sub = p.add_subparsers(dest="command", required=True)
+    p = argparse.ArgumentParser(
+        description="local encrypted password manager (run bare for the TUI)"
+    )
+    sub = p.add_subparsers(dest="command")
 
     sub.add_parser("init", help="create a new empty vault")
     a = sub.add_parser("add", help="add or update an entry")
@@ -151,6 +181,9 @@ def main():
     a.add_argument("--gen", action="store_true", help="generate the password")
     g = sub.add_parser("get", help="copy an entry's password to clipboard")
     g.add_argument("name")
+    e = sub.add_parser("edit", help="update an entry field by field")
+    e.add_argument("name")
+    sub.add_parser("passwd", help="change the master password")
     sub.add_parser("ls", help="list entry names")
     r = sub.add_parser("rm", help="delete an entry")
     r.add_argument("name")
@@ -162,6 +195,11 @@ def main():
     i.add_argument("csv_file")
 
     args = p.parse_args()
+    if args.command is None:
+        from . import tui  # imported lazily: textual is heavy, subcommands skip it
+
+        tui.main()
+        return
     try:
         globals()[f"cmd_{args.command}"](args)
     except vault.VaultError as e:
