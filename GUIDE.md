@@ -80,7 +80,8 @@ pw passwd
 
 You need the current one to do this — it re-locks the whole box with the new
 one. (This is *changing* it, not recovering it — a forgotten master password
-is still gone for good.)
+is still gone for good.) In the visual interface, press `ctrl+p` and type
+"master" to find the same thing.
 
 **Store things that aren't passwords** — WiFi keys, recovery codes, a PIN:
 run `pw add wifi-home` and put the secret in the password prompt or the

@@ -34,6 +34,8 @@ For development: `python3 -m venv venv && ./venv/bin/pip install -e .`
 Run `pw` with no arguments for the interactive TUI: unlock, then `/` to
 filter, Enter to copy the selected password, `n` to add, `e` to edit,
 `d` to delete, `t` to switch themes (persisted across runs), `q` to quit.
+Rarer operations live in the command palette (`ctrl+p`), e.g. changing the
+master password.
 The bundled themes — muted-slate (default), dawn, matrix — are borrowed with
 admiration from [tuxedo](https://github.com/webstonehq/tuxedo); Textual's
 built-in themes are in the picker too.

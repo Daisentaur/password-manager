@@ -6,8 +6,9 @@ and Textual's own built-in themes are available there too.
 """
 
 import os
+from typing import Iterable
 
-from textual.app import App, ComposeResult
+from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import ModalScreen, Screen
@@ -123,6 +124,37 @@ class EntryModal(ModalScreen):
                 "notes": self.query_one("#e-notes", Input).value,
             }
         )
+
+
+class PasswdModal(ModalScreen):
+    """Change the master password. Asks for the current one again so a
+    walked-up-to unlocked session can't lock the real owner out."""
+
+    BINDINGS = [Binding("escape", "dismiss", "cancel")]
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="modal-box"):
+            yield Label("change master password", classes="modal-title")
+            yield Input(password=True, placeholder="current master password", id="p-current")
+            yield Input(password=True, placeholder="new master password (8+ chars)", id="p-new")
+            yield Input(password=True, placeholder="confirm new master password", id="p-confirm")
+            yield Static("enter saves · esc cancels", classes="modal-hint")
+            yield Static("", id="p-error")
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        current = self.query_one("#p-current", Input).value
+        new = self.query_one("#p-new", Input).value
+        error = self.query_one("#p-error", Static)
+        if current != self.app.master:
+            error.update("current master password is wrong")
+            return
+        if len(new) < 8:
+            error.update("new master password must be at least 8 characters")
+            return
+        if new != self.query_one("#p-confirm", Input).value:
+            error.update("new passwords do not match")
+            return
+        self.dismiss(new)
 
 
 class ConfirmModal(ModalScreen):
@@ -339,6 +371,24 @@ class PwApp(App):
         os.makedirs(os.path.dirname(THEME_FILE), exist_ok=True)
         with open(THEME_FILE, "w") as f:
             f.write(theme.name)
+
+    def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
+        yield from super().get_system_commands(screen)
+        if isinstance(screen, MainScreen):
+            yield SystemCommand(
+                "Change master password",
+                "re-encrypt the vault under a new master password",
+                self._change_master,
+            )
+
+    def _change_master(self) -> None:
+        def done(new: str | None) -> None:
+            if new:
+                self.master = new
+                vault.save(VAULT_PATH, self.master, self.entries)
+                self.notify("master password changed (old one is now useless)")
+
+        self.push_screen(PasswdModal(), done)
 
 
 def main() -> None:
