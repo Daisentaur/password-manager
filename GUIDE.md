@@ -7,9 +7,10 @@ No jargon, promise. (The technical version lives in [README.md](README.md).)
 
 A locked box on your own computer that remembers all your passwords, so you
 only ever have to remember **one**: the master password that opens the box.
-Nothing is sent anywhere — no cloud, no account, no company. The box is a
-single scrambled file on your disk that is unreadable without your master
-password.
+Nothing is sent anywhere — no cloud, no account, no company between you and
+your secrets. The box is a single scrambled file on your disk that is
+unreadable without your master password. There's also a knight. You'll meet
+him.
 
 ## The one rule
 
@@ -110,6 +111,11 @@ notes.
   cp ~/.local/share/pw-manager/vault /wherever/you/like/
   ```
 
+**Moving to a new computer?** Install the tool there, then put your copied
+vault file at `~/.local/share/pw-manager/vault` — don't run `pw init` on
+the new machine. Your same master password opens it; nothing about the
+vault belongs to the old computer.
+
 ## When something goes wrong
 
 | What you see | What it means |
@@ -123,8 +129,11 @@ More detail in the README's troubleshooting section.
 
 ## The visual interface
 
-Don't want to remember commands? Just run `pw` with nothing after it. It asks
-for your master password, then shows all your entries in a table:
+Don't want to remember commands? Just run `pw` with nothing after it. The
+knight asks for your master password, then all your entries appear in a
+table:
+
+![opening the vault](assets/unlock.gif)
 
 - **type `/`** and start typing to filter the list as you type — word
   order doesn't matter and half-remembered middles are fine ("count bank"
@@ -143,3 +152,12 @@ for your master password, then shows all your entries in a table:
 
 Every key is also listed in the bar at the bottom of the screen, so there's
 nothing to memorize.
+
+Here's the search doing its forgiving thing:
+
+![searching](assets/search.gif)
+
+And the themes, because you'll be looking at this thing every day — might as
+well like what you see:
+
+![themes](assets/themes.gif)
