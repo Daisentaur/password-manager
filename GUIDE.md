@@ -28,7 +28,7 @@ Open a terminal and run:
 
 ```
 pipx install basic-password-manager
-pw init
+paladin init
 ```
 
 It asks you to choose your master password (typing is invisible — that's
@@ -39,19 +39,19 @@ normal, type anyway), then confirms it. Done: you have an empty vault.
 **Save a password** (it will ask for your master password first, then the details):
 
 ```
-pw add netflix
+paladin add netflix
 ```
 
 Better: let it invent a strong password for you, so it's not one you reuse:
 
 ```
-pw add netflix --gen
+paladin add netflix --gen
 ```
 
 **Get a password back:**
 
 ```
-pw get netflix
+paladin get netflix
 ```
 
 It shows the username and silently copies the password — go paste it
@@ -60,14 +60,14 @@ It shows the username and silently copies the password — go paste it
 **Can't remember what you called something?**
 
 ```
-pw ls            (shows every name in the box)
-pw find bank     (searches names, usernames, and your notes)
+paladin ls            (shows every name in the box)
+paladin find bank     (searches names, usernames, and your notes)
 ```
 
 **Change a stored password** (say, after a website makes you reset it):
 
 ```
-pw edit netflix
+paladin edit netflix
 ```
 
 It shows each detail and asks what to change — just press Enter to keep
@@ -76,7 +76,7 @@ something as it is.
 **Change your master password:**
 
 ```
-pw passwd
+paladin passwd
 ```
 
 You need the current one to do this — it re-locks the whole box with the new
@@ -85,14 +85,14 @@ is still gone for good.) In the visual interface, press `ctrl+p` and type
 "master" to find the same thing.
 
 **Store things that aren't passwords** — WiFi keys, recovery codes, a PIN:
-run `pw add wifi-home` and put the secret in the password prompt or the
+run `paladin add wifi-home` and put the secret in the password prompt or the
 notes.
 
 ## Moving your passwords out of the browser
 
 1. In Chrome: Settings → Passwords → Export. In Firefox: Logins → Export.
    Either way you get a file, usually `passwords.csv`.
-2. Run: `pw import passwords.csv` — or in the visual interface, press
+2. Run: `paladin import passwords.csv` — or in the visual interface, press
    `ctrl+p`, type "import", and give it the file's location.
 3. **Delete that file immediately** — it contains every password unprotected:
    `shred -u passwords.csv`
@@ -112,7 +112,7 @@ notes.
   ```
 
 **Moving to a new computer?** Install the tool there, then put your copied
-vault file at `~/.local/share/pw-manager/vault` — don't run `pw init` on
+vault file at `~/.local/share/pw-manager/vault` — don't run `paladin init` on
 the new machine. Your same master password opens it; nothing about the
 vault belongs to the old computer.
 
@@ -121,7 +121,7 @@ vault belongs to the old computer.
 | What you see | What it means |
 |---|---|
 | "wrong master password" | Almost always a typo — try again slowly |
-| "no vault at ..." | You haven't run `pw init` yet |
+| "no vault at ..." | You haven't run `paladin init` yet |
 | The password prints on screen instead of copying | Install a clipboard tool: `sudo apt install wl-clipboard` |
 | It thinks for a second before answering | Normal — that pause is the lock being hard to pick |
 
@@ -129,7 +129,7 @@ More detail in the README's troubleshooting section.
 
 ## The visual interface
 
-Don't want to remember commands? Just run `pw` with nothing after it. The
+Don't want to remember commands? Just run `paladin` with nothing after it. The
 knight asks for your master password, then all your entries appear in a
 table:
 

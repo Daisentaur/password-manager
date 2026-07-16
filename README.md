@@ -6,14 +6,13 @@
 
 <p align="center"><em>Your passwords, guarded locally. No browser, no cloud, no mercy.</em></p>
 
-I got tired of my browser knowing every password I own, so I built this: a
-password manager that is one encrypted file on my own disk and a small
-terminal app in front of it. No browser, no cloud, no daemon running in the
-background, no company holding my secrets. One file, one master password,
-that's the whole religion.
+A password manager that is one encrypted file on my own disk and a small
+terminal app in front of it. No browser, no cloud, no daemon, no ai running 
+in the background, no company holding my secrets. One file, one master password,
+that's the whole thing.
 
-(It installs as `basic-password-manager` because someone took the good name.
-It answers to `pw`. Its real name is The Paladin.)
+(It installs as `basic-password-manager` because the name came after the project.
+It answers to `paladin` as is its name)
 
 ![unlocking the vault](assets/unlock.gif)
 
@@ -23,7 +22,7 @@ From PyPI ([pipx](https://pipx.pypa.io) keeps CLI tools out of each other's busi
 
 ```bash
 pipx install basic-password-manager    # or: pip install basic-password-manager
-pw init
+paladin init
 ```
 
 From source:
@@ -37,7 +36,7 @@ Hacking on it: `python3 -m venv venv && ./venv/bin/pip install -e .`
 
 ## The TUI
 
-Run `pw` with nothing after it and you get the full app: unlock, arrow
+Run `paladin` with nothing after it and you get the full app: unlock, arrow
 around, Enter copies the selected password to your clipboard. `n` adds,
 `e` edits, `d` deletes (it asks first), `q` quits. Every key is listed in
 the bottom bar so there's nothing to memorize.
@@ -71,18 +70,18 @@ Same vault, no interface, for when you just want the thing:
 
 | Command | What it does |
 |---|---|
-| `pw init` | create a new empty vault |
-| `pw add github` | store an entry (prompts for username/password/notes) |
-| `pw add github --gen` | same, but it invents a strong random password for you |
-| `pw get github` | copy the password to the clipboard, show the username |
-| `pw edit github` | update an entry field by field (Enter keeps what's there) |
-| `pw passwd` | change the master password |
-| `pw ls` | list entry names |
-| `pw rm github` | delete an entry |
-| `pw find "dt bank"` | search names, usernames, notes — every word must match, any order |
-| `pw gen -l 32` | just print a random password |
-| `pw import passwords.csv` | import a browser CSV export (see below) |
-| `pw about` | meet the knight |
+| `paladin init` | create a new empty vault |
+| `paladin add github` | store an entry (prompts for username/password/notes) |
+| `paladin add github --gen` | same, but it invents a strong random password for you |
+| `paladin get github` | copy the password to the clipboard, show the username |
+| `paladin edit github` | update an entry field by field (Enter keeps what's there) |
+| `paladin passwd` | change the master password |
+| `paladin ls` | list entry names |
+| `paladin rm github` | delete an entry |
+| `paladin find "dt bank"` | search names, usernames, notes — every word must match, any order |
+| `paladin gen -l 32` | just print a random password |
+| `paladin import passwords.csv` | import a browser CSV export (see below) |
+| `paladin about` | meet the knight |
 
 The vault lives at `~/.local/share/pw-manager/vault`. Point the `PW_VAULT`
 environment variable somewhere else if you disagree.
@@ -97,7 +96,7 @@ This is why the project exists, so here's the exit route:
 1. Export: Chrome → `chrome://password-manager/settings` → "Export passwords".
    Firefox → `about:logins` → ⋯ menu → "Export passwords". Either way you get
    a CSV.
-2. `pw import passwords.csv`
+2. `paladin import passwords.csv`
 3. **Delete that CSV immediately** — it's every password you own, in
    plaintext: `shred -u passwords.csv`
 4. Turn off password saving in the browser and delete what it stored.
@@ -202,7 +201,7 @@ so do it before the next save.
 isn't ours (truncated, overwritten, or wrong path). Check `echo $PW_VAULT`
 and restore from a backup.
 
-**"no vault at ..."** — run `pw init`, or `PW_VAULT` points somewhere
+**"no vault at ..."** — run `paladin init`, or `PW_VAULT` points somewhere
 unexpected.
 
 **Password prints instead of copying** — no clipboard tool found. Install
@@ -215,7 +214,7 @@ the brute-force resistance. Per command, not per keystroke.
 something is eating your RAM.
 
 **Import brought in junk** — browser CSVs export everything, including
-accounts from 2013. `pw rm <name>` the corpses, or prune the CSV first.
+accounts from 2013. `paladin rm <name>` the corpses, or prune the CSV first.
 
 ## Honest limitations
 

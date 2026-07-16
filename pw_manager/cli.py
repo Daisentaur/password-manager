@@ -1,4 +1,4 @@
-"""CLI for the vault. Installed as the `pw` command."""
+"""CLI for the vault. Installed as the `paladin` command."""
 
 import argparse
 import csv

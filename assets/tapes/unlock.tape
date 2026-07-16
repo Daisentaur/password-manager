@@ -6,7 +6,7 @@ Set Padding 12
 Env PW_VAULT "/tmp/demo-vault/vault"
 Env PATH "/home/dt/dev/pw-manager/venv/bin:/home/dt/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
-Type "pw"
+Type "paladin"
 Sleep 500ms
 Enter
 Sleep 1.5s

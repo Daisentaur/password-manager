@@ -7,7 +7,7 @@ Env PW_VAULT "/tmp/demo-vault/vault"
 Env PATH "/home/dt/dev/pw-manager/venv/bin:/home/dt/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
 Hide
-Type "pw"
+Type "paladin"
 Enter
 Sleep 1.5s
 Type "knight-demo"

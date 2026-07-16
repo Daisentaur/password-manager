@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-07-16
+- **Breaking: the command is now `paladin`, not `pw`.** The knight has a
+  name; the command should answer to it. After `pipx upgrade
+  basic-password-manager`, type `paladin` (your vault, its location, and
+  the `PW_VAULT` variable are all untouched)
+- README and guide rewritten, now with demo gifs (recorded with vhs; the
+  tape scripts live in `assets/tapes/`)
+
 ## 0.2.4 — 2026-07-16
 - The unlock-screen knight now wears the active theme's colors (brightness
   kept, hue from the theme; sword guard takes the warning color) and
