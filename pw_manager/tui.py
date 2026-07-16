@@ -17,10 +17,13 @@ from textual.screen import ModalScreen, Screen
 from textual.theme import Theme
 from textual.widgets import DataTable, Footer, Input, Label, Static
 
-from . import vault
+from . import logo, vault
 from .cli import VAULT_PATH, generate, import_csv, to_clipboard
 
 THEME_FILE = os.path.expanduser("~/.local/share/pw-manager/theme")
+
+APP_NAME = "The Paladin"
+APP_ICON = "♞"
 
 TUXEDO_THEMES = [
     Theme(
@@ -73,7 +76,8 @@ class UnlockScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="unlock-box"):
-            yield Label("pw-manager", id="unlock-title")
+            yield Static(logo.rich_text(), id="unlock-logo")
+            yield Label(f"{APP_ICON} {APP_NAME}", id="unlock-title")
             yield Input(password=True, placeholder="master password", id="master")
             yield Static("", id="unlock-error")
 
@@ -212,6 +216,7 @@ class MainScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
+        yield Static(f" {APP_ICON} {APP_NAME}", id="topbar")
         yield Input(placeholder="/ to search", id="search")
         yield DataTable(id="table", cursor_type="row")
         yield Footer()
@@ -362,13 +367,19 @@ class VaultCommands(Provider):
 
 
 class PwApp(App):
-    TITLE = "pw-manager"
+    TITLE = APP_NAME
     COMMANDS = App.COMMANDS | {VaultCommands}
 
     # Colors come from $theme-variables so every theme applies everywhere;
     # widgets without rules here (table, footer, toasts) use Textual's own
     # theme-aware defaults.
     CSS = """
+    #topbar {
+        height: 1;
+        background: $panel;
+        color: $primary;
+        text-style: bold;
+    }
     #unlock-box {
         align: center middle;
         width: 44;
@@ -377,7 +388,14 @@ class PwApp(App):
         background: $surface;
         border: round $panel;
     }
+    #unlock-logo {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 1;
+    }
     #unlock-title {
+        width: 100%;
+        text-align: center;
         color: $primary;
         text-style: bold;
         margin-bottom: 1;

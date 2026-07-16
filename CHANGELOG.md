@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.3 — 2026-07-16
+- The project now has a name: **The Paladin** (♞). Pixel-knight logo in the
+  README, knight-glyph top bar in the TUI, same `basic-password-manager`
+  install name, same `pw` command
+- The knight renders as terminal pixel art: he announces your new vault on
+  `pw init` (cowsay-style), guards the TUI unlock screen, and `pw about`
+  summons him on demand
+
 ## 0.2.2 — 2026-07-16
 - TUI: import a browser CSV straight from the command palette (`ctrl+p`)
 - Search is now multi-word and forgiving: every word must match somewhere

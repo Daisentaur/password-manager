@@ -47,7 +47,28 @@ def cmd_init(args):
         sys.exit(f"vault already exists at {VAULT_PATH}")
     os.makedirs(os.path.dirname(VAULT_PATH), exist_ok=True)
     vault.save(VAULT_PATH, ask_master(confirm=True), {})
-    print(f"empty vault created at {VAULT_PATH}")
+    if sys.stdout.isatty():
+        from . import logo
+
+        print(logo.says(f"empty vault created at {VAULT_PATH}"))
+    else:
+        print(f"empty vault created at {VAULT_PATH}")
+
+
+def cmd_about(args):
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        v = version("basic-password-manager")
+    except PackageNotFoundError:
+        v = "dev"  # running from source without an install
+    if sys.stdout.isatty():
+        from . import logo
+
+        print(logo.ansi())
+    print(f"The Paladin ♞ v{v}")
+    print("your passwords, guarded locally — no browser, no cloud, no mercy")
+    print("https://github.com/Daisentaur/password-manager")
 
 
 def cmd_add(args):
@@ -198,6 +219,7 @@ def main():
     f.add_argument("term")
     i = sub.add_parser("import", help="import a browser CSV export")
     i.add_argument("csv_file")
+    sub.add_parser("about", help="meet the knight")
 
     args = p.parse_args()
     if args.command is None:

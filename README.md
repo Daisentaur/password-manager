@@ -1,8 +1,14 @@
-# pw-manager
+<p align="center">
+  <img src="assets/logo.png" width="160" alt="The Paladin — a pixel-art knight" />
+</p>
+
+<h1 align="center">The Paladin</h1>
+
+<p align="center"><em>Your passwords, guarded locally. No browser, no cloud, no mercy.</em></p>
 
 A local, encrypted password manager that lives in your terminal. No browser,
 no cloud, no daemon — one encrypted file on disk and a small Python CLI in
-front of it.
+front of it. (Installs as `basic-password-manager`; answers to `pw`.)
 
 ```
 $ python pw.py get github
@@ -59,6 +65,7 @@ Or use the subcommands:
 | `pw find "dt bank"` | search names, usernames, notes — every word must match, any order |
 | `pw gen -l 32` | just print a random password |
 | `pw import passwords.csv` | import a browser CSV export (see below) |
+| `pw about` | meet the knight |
 
 The vault lives at `~/.local/share/pw-manager/vault`. Set the `PW_VAULT`
 environment variable to put it somewhere else.

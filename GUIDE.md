@@ -1,4 +1,4 @@
-# pw-manager: the friendly guide
+# The Paladin ♞ — the friendly guide
 
 This is for you if you've never used a password manager or a terminal much.
 No jargon, promise. (The technical version lives in [README.md](README.md).)
