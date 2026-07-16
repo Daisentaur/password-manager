@@ -91,7 +91,8 @@ notes.
 
 1. In Chrome: Settings → Passwords → Export. In Firefox: Logins → Export.
    Either way you get a file, usually `passwords.csv`.
-2. Run: `pw import passwords.csv`
+2. Run: `pw import passwords.csv` — or in the visual interface, press
+   `ctrl+p`, type "import", and give it the file's location.
 3. **Delete that file immediately** — it contains every password unprotected:
    `shred -u passwords.csv`
 4. In the browser settings, turn off "offer to save passwords" and delete the
@@ -125,7 +126,11 @@ More detail in the README's troubleshooting section.
 Don't want to remember commands? Just run `pw` with nothing after it. It asks
 for your master password, then shows all your entries in a table:
 
-- **type `/`** and start typing to filter the list as you type
+- **type `/`** and start typing to filter the list as you type — word
+  order doesn't matter and half-remembered middles are fine ("count bank"
+  finds "sbi-bank / my-account"); it even matches inside the passwords
+  themselves, for when all you remember is what you typed on that site.
+  What matched lights up in the accent color
 - **arrow keys** move, **Enter** copies the selected password to the clipboard
 - **n** adds a new entry (leave the password box empty and it invents a
   strong one for you)

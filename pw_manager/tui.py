@@ -5,18 +5,20 @@ src/theme.rs); "muted-slate" is the default. `t` opens the theme picker,
 and Textual's own built-in themes are available there too.
 """
 
+import csv
 import os
-from typing import Iterable
 
-from textual.app import App, ComposeResult, SystemCommand
+from rich.text import Text
+from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.command import DiscoveryHit, Hit, Hits, Provider
 from textual.containers import Vertical
 from textual.screen import ModalScreen, Screen
 from textual.theme import Theme
 from textual.widgets import DataTable, Footer, Input, Label, Static
 
 from . import vault
-from .cli import VAULT_PATH, generate, to_clipboard
+from .cli import VAULT_PATH, generate, import_csv, to_clipboard
 
 THEME_FILE = os.path.expanduser("~/.local/share/pw-manager/theme")
 
@@ -126,6 +128,22 @@ class EntryModal(ModalScreen):
         )
 
 
+class ImportModal(ModalScreen):
+    """Ask for the path of a browser CSV export."""
+
+    BINDINGS = [Binding("escape", "dismiss", "cancel")]
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="modal-box"):
+            yield Label("import browser CSV", classes="modal-title")
+            yield Input(placeholder="path to export, e.g. ~/Downloads/passwords.csv", id="i-path")
+            yield Static("enter imports · esc cancels", classes="modal-hint")
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.value.strip():
+            self.dismiss(os.path.expanduser(event.value.strip()))
+
+
 class PasswdModal(ModalScreen):
     """Change the master password. Asks for the current one again so a
     walked-up-to unlocked session can't lock the real owner out."""
@@ -203,18 +221,40 @@ class MainScreen(Screen):
         table.add_columns("name", "username", "notes")
         self.refresh_table()
         table.focus()
+        # match-highlight color comes from the theme, so repaint on switch
+        self.app.theme_changed_signal.subscribe(self, self._on_theme_change)
+
+    def _on_theme_change(self, _theme: Theme) -> None:
+        self.refresh_table()
+
+    @staticmethod
+    def _highlight(value: str, words: list[str], style: str) -> Text:
+        text = Text(value)
+        low = value.lower()
+        for w in words:
+            start = 0
+            while (i := low.find(w, start)) != -1:
+                text.stylize(style, i, i + len(w))
+                start = i + 1
+        return text
 
     def refresh_table(self) -> None:
+        """Every search word must appear somewhere in the entry — name,
+        username, notes, or the password itself. Passwords are searched but
+        never displayed, so matches there can't be highlighted (by design)."""
         table = self.query_one(DataTable)
         table.clear()
-        term = self.query_one("#search", Input).value.lower()
+        words = self.query_one("#search", Input).value.lower().split()
+        style = f"bold {self.app.current_theme.primary}"
         for name, e in sorted(self.app.entries.items()):
-            if (
-                term in name.lower()
-                or term in e["user"].lower()
-                or term in e.get("notes", "").lower()
-            ):
-                table.add_row(name, e["user"], e.get("notes", ""), key=name)
+            hay = f"{name} {e['user']} {e.get('notes', '')} {e['pw']}".lower()
+            if all(w in hay for w in words):
+                table.add_row(
+                    self._highlight(name, words, style),
+                    self._highlight(e["user"], words, style),
+                    self._highlight(e.get("notes", ""), words, style),
+                    key=name,
+                )
 
     def save(self) -> None:
         vault.save(VAULT_PATH, self.app.master, self.app.entries)
@@ -295,8 +335,35 @@ class MainScreen(Screen):
         self.query_one(DataTable).focus()
 
 
+class VaultCommands(Provider):
+    """Palette commands for the unlocked vault. Unlike Textual's built-in
+    provider, the query matches descriptions too, not just titles."""
+
+    @property
+    def _commands(self):
+        if not isinstance(self.screen, MainScreen):
+            return []
+        app = self.app
+        return [
+            ("Import browser CSV", "add every entry from a Chrome/Firefox password export", app._import_csv),
+            ("Change master password", "re-encrypt the vault under a new master password", app._change_master),
+        ]
+
+    async def search(self, query: str) -> Hits:
+        matcher = self.matcher(query)
+        for title, help_text, callback in self._commands:
+            score = matcher.match(f"{title} {help_text}")
+            if score > 0:
+                yield Hit(score, matcher.highlight(title), callback, help=help_text)
+
+    async def discover(self) -> Hits:
+        for title, help_text, callback in self._commands:
+            yield DiscoveryHit(title, callback, help=help_text)
+
+
 class PwApp(App):
     TITLE = "pw-manager"
+    COMMANDS = App.COMMANDS | {VaultCommands}
 
     # Colors come from $theme-variables so every theme applies everywhere;
     # widgets without rules here (table, footer, toasts) use Textual's own
@@ -372,14 +439,21 @@ class PwApp(App):
         with open(THEME_FILE, "w") as f:
             f.write(theme.name)
 
-    def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
-        yield from super().get_system_commands(screen)
-        if isinstance(screen, MainScreen):
-            yield SystemCommand(
-                "Change master password",
-                "re-encrypt the vault under a new master password",
-                self._change_master,
-            )
+    def _import_csv(self) -> None:
+        def done(path: str | None) -> None:
+            if not path:
+                return
+            try:
+                added = import_csv(path, self.entries)
+            except (OSError, csv.Error) as e:
+                self.notify(str(e), severity="error")
+                return
+            vault.save(VAULT_PATH, self.master, self.entries)
+            if isinstance(self.screen, MainScreen):
+                self.screen.refresh_table()
+            self.notify(f"imported {added} entries — delete the CSV securely")
+
+        self.push_screen(ImportModal(), done)
 
     def _change_master(self) -> None:
         def done(new: str | None) -> None:

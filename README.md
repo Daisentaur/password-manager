@@ -34,8 +34,12 @@ For development: `python3 -m venv venv && ./venv/bin/pip install -e .`
 Run `pw` with no arguments for the interactive TUI: unlock, then `/` to
 filter, Enter to copy the selected password, `n` to add, `e` to edit,
 `d` to delete, `t` to switch themes (persisted across runs), `q` to quit.
-Rarer operations live in the command palette (`ctrl+p`), e.g. changing the
-master password.
+The search box matches every word of your query anywhere in an entry —
+name, username, notes, and the password itself — with matches highlighted
+in the theme's accent color (password matches show the row but highlight
+nothing, since passwords are never displayed). Rarer operations live in the
+command palette (`ctrl+p`): importing a browser CSV, changing the master
+password.
 The bundled themes — muted-slate (default), dawn, matrix — are borrowed with
 admiration from [tuxedo](https://github.com/webstonehq/tuxedo); Textual's
 built-in themes are in the picker too.
@@ -52,7 +56,7 @@ Or use the subcommands:
 | `pw passwd` | change the master password |
 | `pw ls` | list entry names |
 | `pw rm github` | delete an entry |
-| `pw find bank` | search entry names, usernames, and notes |
+| `pw find "dt bank"` | search names, usernames, notes — every word must match, any order |
 | `pw gen -l 32` | just print a random password |
 | `pw import passwords.csv` | import a browser CSV export (see below) |
 
@@ -117,9 +121,10 @@ memory for the session; the CLI re-derives the key per command.
 
 argparse subcommands over the two modules above. Passwords are copied to the
 clipboard (`wl-copy`/`xclip`/`xsel`, whichever exists) rather than printed,
-so they don't sit in your terminal scrollback. `find` searches names,
+so they don't sit in your terminal scrollback. CLI `find` searches names,
 usernames, and notes — deliberately *not* passwords, so fragments of secrets
-never land in your shell history.
+never land in your shell history; the TUI search box does cover passwords,
+because nothing typed there is logged anywhere.
 
 ## Backups
 

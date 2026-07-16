@@ -135,16 +135,15 @@ def cmd_gen(args):
 
 
 def cmd_find(args):
-    """Substring search over names, usernames, notes — deliberately not over
-    passwords: a password fragment typed as an argument lands in shell history."""
+    """Every word of the query must appear somewhere in name/username/notes.
+    Deliberately not over passwords: a password fragment typed as a CLI
+    argument lands in shell history (the TUI search does cover passwords)."""
     entries = vault.load(VAULT_PATH, ask_master())
-    term = args.term.lower()
+    words = args.term.lower().split()
     hits = {
         name: e
         for name, e in sorted(entries.items())
-        if term in name.lower()
-        or term in e["user"].lower()
-        or term in e.get("notes", "").lower()
+        if all(w in f"{name} {e['user']} {e.get('notes', '')}".lower() for w in words)
     }
     for name, e in hits.items():
         print(f"{name}  ({e['user']})")
@@ -152,12 +151,11 @@ def cmd_find(args):
         sys.exit(f"nothing matches '{args.term}'")
 
 
-def cmd_import(args):
-    """Browser CSV export (Chrome: name,url,username,password / Firefox: url,...)."""
-    master = ask_master()
-    entries = vault.load(VAULT_PATH, master)
+def import_csv(csv_file: str, entries: dict) -> int:
+    """Merge a browser CSV export (Chrome: name,url,username,password /
+    Firefox: url,...) into entries. Returns how many were added."""
     added = 0
-    with open(args.csv_file, newline="") as f:
+    with open(csv_file, newline="") as f:
         for row in csv.DictReader(f):
             name = row.get("name") or urlparse(row.get("url", "")).netloc
             pw = row.get("password")
@@ -165,6 +163,13 @@ def cmd_import(args):
                 continue
             entries[name] = {"user": row.get("username", ""), "pw": pw, "notes": ""}
             added += 1
+    return added
+
+
+def cmd_import(args):
+    master = ask_master()
+    entries = vault.load(VAULT_PATH, master)
+    added = import_csv(args.csv_file, entries)
     vault.save(VAULT_PATH, master, entries)
     print(f"imported {added} entries — now delete {args.csv_file} securely")
 
