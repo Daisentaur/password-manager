@@ -62,11 +62,34 @@ def ansi(indent: str = "") -> str:
     return "\n".join(out)
 
 
-def rich_text() -> Text:
-    """The knight as a Rich Text, for Textual widgets."""
+_ORANGE = (PALETTE["b"], PALETTE["r"])
+
+
+def _tinted(pixel, tint, accent):
+    """Recolor a pixel: keep its brightness, take its hue from the theme —
+    the accent color for the sword guard, the tint for everything else."""
+    if tint is None or pixel is None:
+        return pixel
+    base = accent if pixel in _ORANGE else tint
+    lum = sum(pixel) / 765
+    return tuple(int(c * lum) for c in base)
+
+
+def _hex_rgb(color: str) -> tuple:
+    color = color.lstrip("#")
+    return tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def rich_text(tint: str | None = None, accent: str | None = None) -> Text:
+    """The knight as a Rich Text, for Textual widgets. Pass theme colors as
+    hex strings to render him in the theme's livery instead of silver."""
+    tint_rgb = _hex_rgb(tint) if tint else None
+    accent_rgb = _hex_rgb(accent) if accent else tint_rgb
     text = Text()
     for row in _pixel_pairs():
         for top, bottom in row:
+            top = _tinted(top, tint_rgb, accent_rgb)
+            bottom = _tinted(bottom, tint_rgb, accent_rgb)
             if top is None and bottom is None:
                 text.append(" ")
             elif bottom is None:
@@ -77,6 +100,25 @@ def rich_text() -> Text:
                 text.append("▀", Style(color="rgb(%d,%d,%d)" % top, bgcolor="rgb(%d,%d,%d)" % bottom))
         text.append("\n")
     return text
+
+
+def ascii_art() -> str:
+    """The knight as plain monochrome ASCII — two chars per pixel to keep
+    his proportions in terminal cells, denser glyphs for brighter armor."""
+    lines = []
+    for row in ROWS:
+        line = ""
+        for ch in row:
+            pixel = PALETTE.get(ch)
+            if pixel is None:
+                line += "  "
+            elif pixel in _ORANGE:
+                line += "%%"
+            else:
+                lum = sum(pixel) / 765
+                line += "::" if lum < 0.15 else "++" if lum < 0.45 else "==" if lum < 0.8 else "##"
+        lines.append(line.rstrip())
+    return "\n".join(lines)
 
 
 def says(message: str) -> str:

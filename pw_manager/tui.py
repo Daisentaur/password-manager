@@ -23,7 +23,7 @@ from .cli import VAULT_PATH, generate, import_csv, to_clipboard
 THEME_FILE = os.path.expanduser("~/.local/share/pw-manager/theme")
 
 APP_NAME = "The Paladin"
-APP_ICON = "♞"
+APP_ICON = "⚔"
 
 TUXEDO_THEMES = [
     Theme(
@@ -76,10 +76,20 @@ class UnlockScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="unlock-box"):
-            yield Static(logo.rich_text(), id="unlock-logo")
+            yield Static(id="unlock-logo")
             yield Label(f"{APP_ICON} {APP_NAME}", id="unlock-title")
             yield Input(password=True, placeholder="master password", id="master")
             yield Static("", id="unlock-error")
+
+    def on_mount(self) -> None:
+        self._paint_logo()
+        self.app.theme_changed_signal.subscribe(self, self._paint_logo)
+
+    def _paint_logo(self, _theme: Theme | None = None) -> None:
+        theme = self.app.current_theme
+        self.query_one("#unlock-logo", Static).update(
+            logo.rich_text(tint=theme.primary, accent=theme.warning or theme.primary)
+        )
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         self.query_one("#unlock-error", Static).update("unlocking…")

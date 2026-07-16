@@ -62,11 +62,10 @@ def cmd_about(args):
         v = version("basic-password-manager")
     except PackageNotFoundError:
         v = "dev"  # running from source without an install
-    if sys.stdout.isatty():
-        from . import logo
+    from . import logo
 
-        print(logo.ansi())
-    print(f"The Paladin ♞ v{v}")
+    print(logo.ascii_art())
+    print(f"The Paladin ⚔ v{v}")
     print("your passwords, guarded locally — no browser, no cloud, no mercy")
     print("https://github.com/Daisentaur/password-manager")
 

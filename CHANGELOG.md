@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.4 — 2026-07-16
+- The unlock-screen knight now wears the active theme's colors (brightness
+  kept, hue from the theme; sword guard takes the warning color) and
+  re-tints live when you switch themes
+- Top bar glyph is now ⚔ (the chess horse was a horse, not a knight)
+- `pw about` renders the knight as monochrome ASCII art — each of his three
+  appearances now has its own style: full color at `init`, theme livery at
+  unlock, plain ASCII at `about`
+
 ## 0.2.3 — 2026-07-16
 - The project now has a name: **The Paladin** (♞). Pixel-knight logo in the
   README, knight-glyph top bar in the TUI, same `basic-password-manager`
