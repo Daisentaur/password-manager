@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2 — 2026-07-19
+- Fixed: the in-TUI QR could wrap inside its modal, scrambling the modules
+  into an unscannable mess — the QR text is now unwrappable and the modal is
+  pinned to the QR's exact width (with a regression test that measures every
+  rendered line)
+- The session URL now sits under the QR as selectable text instead of being
+  baked into the QR block
+
 ## 0.4.1 — 2026-07-19
 - Fixed: a phone holding its connection open could stall Ctrl+C on `paladin
   mobile`, and a second Ctrl+C during cleanup dumped a traceback — the server

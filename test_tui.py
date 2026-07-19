@@ -112,6 +112,28 @@ async def run() -> None:
         await pilot.pause()
         vault.load(os.environ["PW_VAULT"], "newmaster99")  # decrypts under new master
 
+        # mobile modal: QR must render unwrapped at exactly its own width —
+        # a wrapped QR is scrambled and unscannable (regression: 0.4.1)
+        from pw_manager import mobile
+        from pw_manager.tui import _qr_text
+
+        # no network in tests: stub the session, we only test the rendering
+        mobile.start_session = lambda *a, **k: (_ for _ in ()).throw(
+            mobile.MobileError("stubbed in test")
+        )
+        app._mobile()
+        await pilot.pause()
+        url = "https://buyers-modes-instrumentation-dance.trycloudflare.com/uqO26mXxvBNf8Au1fMNGzg"
+        app.screen._show_qr(url)
+        await pilot.pause()
+        qr_widget = app.screen.query_one("#qr")
+        _, width = _qr_text(url, app.current_theme.primary)
+        assert qr_widget.size.width == width
+        lines = str(qr_widget.render()).strip("\n").split("\n")
+        assert all(len(line) == width for line in lines), "QR lines wrapped/broken"
+        await pilot.press("escape")
+        await pilot.pause()
+
         # themes: default, switch persists, fresh app remembers
         assert app.theme == "muted-slate"
         app.theme = "dawn"

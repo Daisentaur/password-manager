@@ -160,9 +160,10 @@ class ImportModal(ModalScreen):
             self.dismiss(os.path.expanduser(event.value.strip()))
 
 
-def _qr_text(url: str, primary: str) -> Text:
+def _qr_text(url: str, primary: str) -> tuple[Text, int]:
     """The QR as half-block art: theme-colored modules on white, darkened
-    until cameras can read it (contrast beats style, but we can have both)."""
+    until cameras can read it. Returns (text, width_in_cells) — the caller
+    must give the widget exactly that width: a wrapped QR is a dead QR."""
     import qrcode
 
     r, g, b = logo._hex_rgb(primary)
@@ -176,12 +177,12 @@ def _qr_text(url: str, primary: str) -> Text:
     matrix = qr.get_matrix()
     if len(matrix) % 2:
         matrix.append([False] * len(matrix[0]))
-    text = Text()
+    text = Text(no_wrap=True)
     for top, bottom in zip(matrix[::2], matrix[1::2]):
         for t, btm in zip(top, bottom):
             text.append("▀", Style(color=dark if t else light, bgcolor=dark if btm else light))
         text.append("\n")
-    return text
+    return text, len(matrix[0])
 
 
 class MobileModal(ModalScreen):
@@ -199,6 +200,7 @@ class MobileModal(ModalScreen):
         with Vertical(classes="modal-box", id="mobile-box"):
             yield Label("open on phone", classes="modal-title")
             yield Static("creating your secure link…", id="qr")
+            yield Static("", id="mobile-url")
             yield Static("", id="mobile-status")
             yield Static("esc ends the session", classes="modal-hint")
 
@@ -217,9 +219,19 @@ class MobileModal(ModalScreen):
                 self.query_one("#qr", Static).update, f"couldn't start: {e}"
             )
             return
-        qr = _qr_text(url, self.app.current_theme.primary)
-        qr.append(f"\n{url}", Style(color=self.app.current_theme.primary))
-        self.app.call_from_thread(self.query_one("#qr", Static).update, qr)
+        self.app.call_from_thread(self._show_qr, url)
+
+    def _show_qr(self, url: str) -> None:
+        qr, width = _qr_text(url, self.app.current_theme.primary)
+        widget = self.query_one("#qr", Static)
+        widget.update(qr)
+        # pin every width to the QR's real size — auto-layout wrapping a QR
+        # scrambles the modules and kills scannability
+        widget.styles.width = width
+        for wid in ("#mobile-url", "#mobile-status"):
+            self.query_one(wid, Static).styles.width = width
+        self.query_one("#mobile-box").styles.width = width + 6  # padding + border
+        self.query_one("#mobile-url", Static).update(url)
 
     def _on_fetch(self) -> None:
         self.app.call_from_thread(
@@ -514,7 +526,10 @@ class PwApp(App):
     }
     #mobile-box {
         width: auto;
-        max-width: 90%;
+    }
+    #mobile-url {
+        color: $text-muted;
+        margin-top: 1;
     }
     .modal-title {
         color: $primary;
