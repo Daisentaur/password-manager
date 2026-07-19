@@ -116,6 +116,36 @@ vault file at `~/.local/share/pw-manager/vault` — don't run `paladin init` on
 the new machine. Your same master password opens it; nothing about the
 vault belongs to the old computer.
 
+## Your passwords, on your phone
+
+Run:
+
+```
+paladin mobile
+```
+
+A QR code appears in your terminal. Scan it with your phone camera, and your
+vault opens as a page in the phone's browser — the knight's there too, wearing
+whatever theme you had on. Type your master password **on the phone** and your
+entries appear; tap one to copy its password. Search works the same forgiving
+way as everywhere else.
+
+A few things worth knowing, in plain terms:
+
+- The page never *stores* anything on the phone. Close the tab and it's all
+  gone. Leave it open and idle and it locks itself after 5 minutes.
+- What travels over the internet is only the locked box — the same scrambled
+  gibberish as the vault file. Your master password never leaves the phone;
+  the unscrambling happens right there in the phone's browser.
+- The link in the QR only works while `paladin mobile` is running on your
+  computer (Ctrl+C ends it). A page you already have open keeps working —
+  it just can't be *re*-loaded until you run it again.
+- The very first run downloads one small helper (the thing that creates the
+  secure link) — that's a one-time pause.
+- If you refresh the page after adding new passwords on your computer, the
+  phone gets the fresh vault. That's the whole "sync": the computer is
+  always the real copy, the phone just looks at it.
+
 ## When something goes wrong
 
 | What you see | What it means |
