@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>The Paladin</title>
+<style>
+  :root {
+    --bg:__C_BG__; --panel:__C_SURFACE__; --border:__C_PANEL__; --fg:__C_FG__;
+    --dim:__C_DIM__; --accent:__C_PRIMARY__; --sel:__C_PANEL__; --err:__C_ERROR__;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    margin:0; background:var(--bg); color:var(--fg); min-height:100vh;
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  #app { max-width:640px; margin:0 auto; padding:16px; }
+  h1 { color:var(--accent); font-size:1.3rem; margin:8px 0 20px; }
+  input {
+    width:100%; padding:14px; font-size:16px; color:var(--fg);
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+  }
+  input:focus { outline:none; border-color:var(--accent); }
+  button {
+    width:100%; padding:14px; margin-top:12px; font-size:16px; font-weight:600;
+    color:var(--bg); background:var(--accent); border:none; border-radius:8px;
+  }
+  .hint { color:var(--dim); font-size:0.85rem; margin-top:14px; }
+  .err { color:var(--err); margin-top:12px; min-height:1.2em; }
+  .row {
+    padding:14px; margin-top:8px; background:var(--panel);
+    border:1px solid var(--border); border-radius:8px;
+  }
+  .row .name { font-weight:600; }
+  .row .user { color:var(--dim); font-size:0.9rem; }
+  .row .pw {
+    margin-top:8px; font-family:ui-monospace,monospace; font-size:1.05rem;
+    word-break:break-all; color:var(--accent); display:none;
+  }
+  .row.open .pw { display:block; }
+  .copied { color:var(--accent); font-size:0.8rem; margin-left:8px; }
+  mark { background:none; color:var(--accent); font-weight:600; }
+  #knight { text-align:center; margin:16px 0 4px; }
+  #knight svg { image-rendering:pixelated; }
+</style>
+</head>
+<body>
+<div id="app">
+  __KNIGHT__
+  <h1>The Paladin</h1>
+  <div id="lock">
+    <input id="master" type="password" placeholder="master password" autocomplete="off"
+           autocapitalize="off" autocorrect="off">
+    <button id="unlock">unlock</button>
+    <div class="err" id="err"></div>
+    <div class="hint">Decrypted here on your phone. Nothing is saved. Auto-locks after 5 minutes idle.</div>
+  </div>
+  <div id="vault" style="display:none">
+    <input id="search" placeholder="search" autocapitalize="off" autocorrect="off">
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>/*__ARGON2__*/</script>
+<script>
+const SALT = b64("__SALT__"), BLOB = b64("__BLOB__");
+const NONCE_LEN = __NONCE_LEN__, TIME = __TIME__, MEM = __MEM_KIB__, PAR = __PAR__, KEYLEN = __KEYLEN__;
+let ENTRIES = null, IDLE = null;
+
+function b64(s){ return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+
+async function unlock() {
+  const err = document.getElementById("err");
+  const pw = document.getElementById("master").value;
+  if (!pw) return;
+  err.textContent = "unlocking…";
+  try {
+    const keyBytes = await hashwasm.argon2id({
+      password: pw, salt: SALT, parallelism: PAR, iterations: TIME,
+      memorySize: MEM, hashLength: KEYLEN, outputType: "binary",
+    });
+    const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+    const nonce = BLOB.slice(0, NONCE_LEN), ct = BLOB.slice(NONCE_LEN);
+    const pt = await crypto.subtle.decrypt({ name:"AES-GCM", iv:nonce }, key, ct);
+    ENTRIES = JSON.parse(new TextDecoder().decode(pt));
+  } catch (e) {
+    err.textContent = "wrong master password";
+    return;
+  }
+  document.getElementById("master").value = "";
+  document.getElementById("lock").style.display = "none";
+  document.getElementById("vault").style.display = "block";
+  render("");
+  resetIdle();
+}
+
+function esc(s){ return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function hl(s, words){
+  let out = esc(s);
+  for (const w of words) if (w) out = out.replace(
+    new RegExp("("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"), "<mark>$1</mark>");
+  return out;
+}
+
+function render(q) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  for (const name of Object.keys(ENTRIES).sort()) {
+    const e = ENTRIES[name];
+    const hay = (name+" "+e.user+" "+(e.notes||"")+" "+e.pw).toLowerCase();
+    if (!words.every(w => hay.includes(w))) continue;
+    const div = document.createElement("div");
+    div.className = "row";
+    div.innerHTML = `<div class="name">${hl(name,words)}</div>`
+      + `<div class="user">${hl(e.user,words)}</div>`
+      + `<div class="pw"></div>`;
+    div.querySelector(".pw").textContent = e.pw;  // never highlight the password
+    div.onclick = () => reveal(div, e.pw);
+    list.appendChild(div);
+  }
+}
+
+async function reveal(div, pw) {
+  div.classList.toggle("open");
+  resetIdle();
+  try {
+    await navigator.clipboard.writeText(pw);
+    const tag = document.createElement("span");
+    tag.className = "copied"; tag.textContent = "copied";
+    div.querySelector(".name").appendChild(tag);
+    setTimeout(() => tag.remove(), 1500);
+  } catch (e) { /* reveal is the fallback */ }
+}
+
+function lock() {
+  ENTRIES = null;
+  document.getElementById("vault").style.display = "none";
+  document.getElementById("list").innerHTML = "";
+  document.getElementById("lock").style.display = "block";
+  document.getElementById("err").textContent = "";
+}
+function resetIdle(){ clearTimeout(IDLE); IDLE = setTimeout(lock, 5*60*1000); }
+
+document.getElementById("unlock").onclick = unlock;
+document.getElementById("master").addEventListener("keydown", e => { if (e.key==="Enter") unlock(); });
+document.getElementById("search").addEventListener("input", e => { render(e.target.value); resetIdle(); });
+["touchstart","keydown"].forEach(ev => document.addEventListener(ev, () => { if (ENTRIES) resetIdle(); }));
+</script>
+</body>
+</html>

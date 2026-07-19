@@ -55,6 +55,15 @@ def cmd_init(args):
         print(f"empty vault created at {VAULT_PATH}")
 
 
+def cmd_mobile(args):
+    from . import mobile
+
+    try:
+        mobile.run(VAULT_PATH, stable_url=args.url)
+    except mobile.MobileError as e:
+        sys.exit(str(e))
+
+
 def cmd_about(args):
     from importlib.metadata import PackageNotFoundError, version
 
@@ -218,6 +227,8 @@ def main():
     f.add_argument("term")
     i = sub.add_parser("import", help="import a browser CSV export")
     i.add_argument("csv_file")
+    m = sub.add_parser("mobile", help="open your vault on your phone over an HTTPS tunnel")
+    m.add_argument("--url", help="serve at your own https subdomain instead of a quick tunnel")
     sub.add_parser("about", help="meet the knight")
 
     args = p.parse_args()

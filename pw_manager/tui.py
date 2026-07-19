@@ -361,6 +361,7 @@ class VaultCommands(Provider):
         app = self.app
         return [
             ("Import browser CSV", "add every entry from a Chrome/Firefox password export", app._import_csv),
+            ("Open on phone", "serve the vault to your phone over an HTTPS tunnel (QR code)", app._mobile),
             ("Change master password", "re-encrypt the vault under a new master password", app._change_master),
         ]
 
@@ -482,6 +483,15 @@ class PwApp(App):
             self.notify(f"imported {added} entries — delete the CSV securely")
 
         self.push_screen(ImportModal(), done)
+
+    def _mobile(self) -> None:
+        from . import mobile
+
+        with self.suspend():  # hand the terminal to the QR + tunnel until Ctrl+C
+            try:
+                mobile.run(VAULT_PATH)
+            except mobile.MobileError as e:
+                input(f"\n{e}\n\npress Enter to return… ")
 
     def _change_master(self) -> None:
         def done(new: str | None) -> None:

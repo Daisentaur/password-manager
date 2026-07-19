@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 2026-07-19
+- **`paladin mobile`**: open your vault on your phone with one QR scan. Serves
+  a single page with the encrypted vault embedded over a throwaway HTTPS
+  tunnel (cloudflared, auto-fetched and checksum-verified on first use); the
+  master password is typed on the phone and the vault is decrypted in the
+  phone's browser, so only ciphertext ever leaves your machine. Also in the
+  TUI palette as "Open on phone".
+- Page auto-locks after 5 minutes idle; nothing is stored on the phone.
+- `--url https://vault.you.dev` serves at your own subdomain instead of a
+  random tunnel (path auto-rotates every 30 days); `PALADIN_MOBILE_URL`
+  makes it the default.
+- The phone page wears your current TUI theme — colors and the pixel knight,
+  baked in at QR-generation time.
+
 ## 0.3.0 — 2026-07-16
 - **Breaking: the command is now `paladin`, not `pw`.** The knight has a
   name; the command should answer to it. After `pipx upgrade

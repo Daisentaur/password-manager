@@ -4,15 +4,15 @@
 
 <h1 align="center">The Paladin</h1>
 
-<p align="center"><em>Your passwords, guarded locally. No browser, no cloud, no mercy.</em></p>
+<p align="center"><em>Your passwords, guarded locally. No browser, no cloud, just protection.</em></p>
 
 A password manager that is one encrypted file on my own disk and a small
 terminal app in front of it. No browser, no cloud, no daemon, no ai running 
 in the background, no company holding my secrets. One file, one master password,
 that's the whole thing.
 
-(It installs as `basic-password-manager` because the name came after the project.
-It answers to `paladin` as is its name)
+(It installs as `basic-password-manager` because the name "The Paladin" came to me
+quite a while after already starting the project. It answers to `paladin` as is its name)
 
 ![unlocking the vault](assets/unlock.gif)
 
@@ -41,26 +41,28 @@ around, Enter copies the selected password to your clipboard. `n` adds,
 `e` edits, `d` deletes (it asks first), `q` quits. Every key is listed in
 the bottom bar so there's nothing to memorize.
 
-The search forgives you. Press `/` and type whatever fragments you remember
-— every word just has to appear *somewhere* in the entry, any field, any
+Press `/` and type whatever fragments you remember of whatever it is you're
+looking for it just has to appear *somewhere* in the entry, any field, any
 order. It even searches inside the passwords themselves, for the day all
-you remember is what you typed on that site (matches get highlighted in the
-theme's accent, except password matches, which quietly show the row and
-highlight nothing — passwords never get displayed, that's the deal).
+you remember is what you typed on that site, so if it's in there the search 
+will for sure find it. Matches get highlighted in the theme's accent, except
+password matches, which quietly show the row and highlight nothing — passwords
+never get displayed, that's the deal).
 
 ![searching the vault](assets/search.gif)
 
-The rarer stuff lives in the command palette — `ctrl+p`, type a few letters,
-done. Importing your browser's passwords and changing the master password
-both live there.
+The rarer stuff lives in the command palette — `super+p`, commands you will need
+sometimes but deffintely shouldn't crowd the main password list for example, 
+importing your browser's passwords, opening your vault on your phone, and
+changing the master password all live there, along with others.
 
 ![the command palette](assets/palette.gif)
 
-And themes. `t` opens the picker; the bundled ones — muted-slate (default),
+And themes. `t` opens the theme picker; the bundled ones — muted-slate (default),
 dawn, matrix — are lifted with love from
 [tuxedo](https://github.com/webstonehq/tuxedo)'s palettes, and all of
 Textual's built-ins are in there too. Your pick sticks across runs. Even the
-knight on the unlock screen dresses to match.
+knight on the unlock screen dresses to match your theme, try it ;)
 
 ![switching themes](assets/themes.gif)
 
@@ -71,16 +73,17 @@ Same vault, no interface, for when you just want the thing:
 | Command | What it does |
 |---|---|
 | `paladin init` | create a new empty vault |
-| `paladin add github` | store an entry (prompts for username/password/notes) |
-| `paladin add github --gen` | same, but it invents a strong random password for you |
-| `paladin get github` | copy the password to the clipboard, show the username |
-| `paladin edit github` | update an entry field by field (Enter keeps what's there) |
+| `paladin add example` | store an entry (prompts for username/password/notes) |
+| `paladin add example --gen` | same, but it invents a strong random password for you |
+| `paladin get example` | copy the password to the clipboard, show the username |
+| `paladin edit example` | update an entry field by field (Enter keeps what's there) |
 | `paladin passwd` | change the master password |
 | `paladin ls` | list entry names |
-| `paladin rm github` | delete an entry |
+| `paladin rm example` | delete an entry |
 | `paladin find "dt bank"` | search names, usernames, notes — every word must match, any order |
 | `paladin gen -l 32` | just print a random password |
 | `paladin import passwords.csv` | import a browser CSV export (see below) |
+| `paladin mobile` | open your vault on your phone (QR + HTTPS tunnel) |
 | `paladin about` | meet the knight |
 
 The vault lives at `~/.local/share/pw-manager/vault`. Point the `PW_VAULT`
@@ -93,19 +96,47 @@ recovery codes, PINs, the answer to "what was your first pet".
 
 This is why the project exists, so here's the exit route:
 
-1. Export: Chrome → `chrome://password-manager/settings` → "Export passwords".
-   Firefox → `about:logins` → ⋯ menu → "Export passwords". Either way you get
-   a CSV.
-2. `paladin import passwords.csv`
-3. **Delete that CSV immediately** — it's every password you own, in
+1. Export:
+   Chrome → `chrome://password-manager/settings` → "Export passwords".
+   Firefox → `about:logins` → ⋯ menu → "Export passwords".
+   Either way you get a CSV.
+3. `paladin import passwords.csv` 
+4. **Delete that CSV immediately** — it's every password you own, in
    plaintext: `shred -u passwords.csv`
-4. Turn off password saving in the browser and delete what it stored.
+5. Turn off password saving in the browser and delete what it stored.
+
+## Your phone
+
+`paladin mobile` (or "Open on phone" in the palette) puts your vault on your
+phone with one QR scan. It spins up a throwaway HTTPS tunnel
+([cloudflared](https://github.com/cloudflare/cloudflared), fetched
+automatically the first time), serves a single page with the *encrypted*
+vault baked in, and prints the URL as a QR in your terminal. Scan it, type
+your master password **on the phone**, and the decryption happens in the
+phone's browser — the laptop, the tunnel, and the network only ever carry
+ciphertext. Nothing is stored on the phone; the page auto-locks after 5
+minutes idle, and the whole session dies when you press Ctrl+C.
+
+It works on any modern phone browser (Safari, Chrome, Firefox…) — no app to
+install. The page opens in whatever TUI theme you had set when you generated
+the QR, knight and all (it won't follow later theme changes — scan again for
+that).
+
+Have your own domain? `paladin mobile --url https://vault.you.dev` serves at
+your subdomain instead of a random tunnel, so a bookmark keeps working (the
+path rotates every 30 days on its own). It serves on `127.0.0.1:8787` by
+default — point your reverse proxy or named tunnel there. Set
+`PALADIN_MOBILE_URL` (and optionally `PALADIN_MOBILE_PORT`) and plain
+`paladin mobile` uses it.
+
+The one thing crossing the internet is the encrypted blob, which is useless
+without the master password that never leaves your phone. The tunnel provider
+sees the same noise anyone else would.
 
 ## How it works
 
-Three layers, ~120 lines total, and I mean it about the reading order — this
-project exists because I wanted to understand this stuff, and the code is
-meant to be read:
+Three layers, pretty small. This project exists because I wanted to 
+understand this stuff, I'd be happy if someone learns from this, from me:
 
 ### 1. `crypto.py` — password → key, key → ciphertext
 
@@ -180,9 +211,8 @@ partition both systems mount and point both at it:
 
 ## Troubleshooting
 
-**"I forgot the master password."** The data is gone. Not "gone until
-support resets it" — mathematically gone. That's not a bug, that's the
-entire design: every "forgot password?" flow is a back door, and back doors
+**"I forgot the master password."** The data is gone. Mathematically gone.
+That's by design: every "forgot password?" flow is a back door, and back doors
 don't check IDs. Pick a long phrase you can't forget (a sentence beats
 `Tr0ub4dor&3`), and know that backups protect you from losing the *file*,
 never from forgetting the *word*.
@@ -226,8 +256,7 @@ I'd rather you know these than find them:
   Malware already on your machine could read it — true of every password
   manager ever made; the vault protects the file at rest, not a compromised
   machine.
-- Single file, no sync. Syncing is your problem for now (and honestly, `cp`
-  is a fine answer).
+- Single file, no sync. Syncing is your problem for now.
 
 ## Running the checks
 

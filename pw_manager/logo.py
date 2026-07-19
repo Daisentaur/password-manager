@@ -102,6 +102,29 @@ def rich_text(tint: str | None = None, accent: str | None = None) -> Text:
     return text
 
 
+def svg(tint: str | None = None, accent: str | None = None, scale: int = 10) -> str:
+    """The knight as an SVG (one <rect> per pixel), for the mobile page.
+    Same tinting as the TUI: brightness kept, hue from the theme."""
+    tint_rgb = _hex_rgb(tint) if tint else None
+    accent_rgb = _hex_rgb(accent) if accent else tint_rgb
+    w, h = len(ROWS[0]), len(ROWS)
+    rects = []
+    for y, row in enumerate(ROWS):
+        for x, ch in enumerate(row):
+            pixel = _tinted(PALETTE.get(ch), tint_rgb, accent_rgb)
+            if pixel is None:
+                continue
+            rects.append(
+                '<rect x="%d" y="%d" width="1" height="1" fill="#%02x%02x%02x"/>'
+                % (x, y, *pixel)
+            )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
+        'viewBox="0 0 %d %d" shape-rendering="crispEdges">%s</svg>'
+        % (w * scale, h * scale, w, h, "".join(rects))
+    )
+
+
 def ascii_art() -> str:
     """The knight as plain monochrome ASCII — two chars per pixel to keep
     his proportions in terminal cells, denser glyphs for brighter armor."""

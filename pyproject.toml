@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "basic-password-manager"
-version = "0.3.0"
+version = "0.4.0"
 description = "The Paladin — a local encrypted password manager that lives in your terminal"
 readme = "README.md"
 license = "MIT"
@@ -13,10 +13,14 @@ dependencies = [
     "argon2-cffi",
     "cryptography",
     "textual",
+    "qrcode",
 ]
 
 [tool.setuptools]
 packages = ["pw_manager"]
+
+[tool.setuptools.package-data]
+pw_manager = ["web/*"]
 
 [project.scripts]
 paladin = "pw_manager.cli:main"
