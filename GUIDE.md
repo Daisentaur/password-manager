@@ -124,8 +124,10 @@ Run:
 paladin mobile
 ```
 
-A QR code appears in your terminal. Scan it with your phone camera, and your
-vault opens as a page in the phone's browser — the knight's there too, wearing
+A QR code appears in your terminal (or, inside the visual interface, press
+`ctrl+p` and pick "Open on phone" — the QR shows up right there, in your
+colors). Scan it with your phone camera, and your vault opens as a page in
+the phone's browser — the knight's there too, wearing
 whatever theme you had on. Type your master password **on the phone** and your
 entries appear; tap one to copy its password. Search works the same forgiving
 way as everywhere else.

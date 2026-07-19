@@ -29,9 +29,11 @@ with open(tok_path, "w") as f:
     f.write(f"{time.time() - mobile.TOKEN_TTL - 1}:{t1}")
 assert mobile._load_token() != t1, "token must rotate after the TTL"
 
-# the server serves the page only at /<token>, 404 everywhere else
+# the server serves the page only at /<token>, 404 everywhere else,
+# and reports each successful fetch through on_fetch
 token = mobile._load_token()
-server = mobile._serve(os.environ["PW_VAULT"], token)
+fetches = []
+server = mobile._serve(os.environ["PW_VAULT"], token, on_fetch=lambda: fetches.append(1))
 port = server.server_address[1]
 import threading
 
@@ -41,12 +43,14 @@ try:
         body = r.read()
         assert r.status == 200 and b"argon2id" in body
         assert r.headers["Cache-Control"] == "no-store"
+    assert fetches == [1], "on_fetch should fire once per page load"
     try:
         urllib.request.urlopen(f"http://127.0.0.1:{port}/wrong")
         raise AssertionError("wrong path should 404")
     except urllib.error.HTTPError as e:
         assert e.code == 404
+    assert fetches == [1], "404s must not count as fetches"
 finally:
-    server.shutdown()
+    mobile.stop_session(server, None)
 
 print("mobile self-checks passed")

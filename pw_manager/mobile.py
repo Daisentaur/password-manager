@@ -162,9 +162,7 @@ def _build_page(raw_vault: bytes) -> bytes:
     ).encode()
 
 
-def _serve(vault_path: str, token: str, port: int = 0) -> http.server.HTTPServer:
-    page_holder = {}
-
+def _serve(vault_path: str, token: str, port: int = 0, on_fetch=None) -> http.server.HTTPServer:
     class Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
             if self.path.rstrip("/") != f"/{token}":
@@ -177,11 +175,14 @@ def _serve(vault_path: str, token: str, port: int = 0) -> http.server.HTTPServer
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(page)
+            if on_fetch:
+                on_fetch()
 
         def log_message(self, *a):
-            pass  # keep the terminal clean
+            pass  # fetch visibility goes through on_fetch instead
 
-    return http.server.HTTPServer(("127.0.0.1", port), Handler)
+    # threading server: a phone holding a connection open can't stall shutdown
+    return http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
 
 
 def _start_tunnel(cf: str, port: int) -> tuple[subprocess.Popen, str]:
@@ -204,7 +205,11 @@ def _start_tunnel(cf: str, port: int) -> tuple[subprocess.Popen, str]:
     raise MobileError("cloudflared didn't produce a tunnel URL in time")
 
 
-def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
+def start_session(
+    vault_path: str, stable_url: str | None = None, port: int = 0, on_fetch=None
+) -> tuple[http.server.HTTPServer, subprocess.Popen | None, str]:
+    """Start server (+ tunnel unless a stable URL is configured). Returns
+    (server, tunnel_process_or_None, full_url)."""
     if not os.path.exists(vault_path):
         raise MobileError(f"no vault at {vault_path} — run 'paladin init' first")
 
@@ -214,7 +219,7 @@ def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
         port = int(os.environ.get("PALADIN_MOBILE_PORT", "8787"))
 
     token = _load_token()
-    server = _serve(vault_path, token, port)
+    server = _serve(vault_path, token, port, on_fetch=on_fetch)
     port = server.server_address[1]
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
@@ -222,10 +227,32 @@ def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
     if stable_url:
         base = stable_url.rstrip("/")  # your reverse proxy points here → 127.0.0.1:port
     else:
-        cf = cloudflared_path()
-        proc, tunnel_url = _start_tunnel(cf, port)
-        base = tunnel_url
-    url = f"{base}/{token}"
+        try:
+            cf = cloudflared_path()
+            proc, base = _start_tunnel(cf, port)
+        except BaseException:
+            server.shutdown()
+            raise
+    return server, proc, f"{base}/{token}"
+
+
+def stop_session(server, proc) -> None:
+    """Tunnel first (no new requests), then server; a second Ctrl+C during
+    cleanup must never produce a traceback."""
+    try:
+        if proc:
+            proc.terminate()
+        server.shutdown()
+    except KeyboardInterrupt:
+        pass
+
+
+def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
+    def fetched():
+        print(f"  vault page served to a device at {time.strftime('%H:%M:%S')}")
+
+    print("\n  creating your secure link…", flush=True)
+    server, proc, url = start_session(vault_path, stable_url, port, on_fetch=fetched)
 
     import qrcode
 
@@ -235,7 +262,7 @@ def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
     qr.print_ascii(invert=True)
     print(f"\n  {url}\n")
     print("  the master password is typed on your phone; only ciphertext leaves this machine.")
-    print("  Ctrl+C to stop the session.\n")
+    print("  every page load is logged below — Ctrl+C to stop the session.\n")
 
     try:
         while True:
@@ -243,6 +270,4 @@ def run(vault_path: str, stable_url: str | None = None, port: int = 0) -> None:
     except KeyboardInterrupt:
         print("\nsession ended.")
     finally:
-        server.shutdown()
-        if proc:
-            proc.terminate()
+        stop_session(server, proc)

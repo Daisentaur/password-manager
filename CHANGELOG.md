@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.1 — 2026-07-19
+- Fixed: a phone holding its connection open could stall Ctrl+C on `paladin
+  mobile`, and a second Ctrl+C during cleanup dumped a traceback — the server
+  is now threaded and cleanup is interrupt-proof
+- The TUI's "Open on phone" now shows the QR *inside* the app, in your theme's
+  colors (auto-darkened so cameras can still read it) — no more dropping to
+  the terminal; Esc ends the session
+- Every page load is now logged live ("vault page served … at HH:MM:SS") in
+  both the CLI and the TUI modal — you see every device that fetches your
+  vault, and Ctrl+C/Esc ends the session on the spot
+- "creating your secure link…" now prints immediately, so the tunnel
+  start-up pause no longer looks like a hang
+
 ## 0.4.0 — 2026-07-19
 - **`paladin mobile`**: open your vault on your phone with one QR scan. Serves
   a single page with the encrypted vault embedded over a throwaway HTTPS

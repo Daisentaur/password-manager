@@ -7,7 +7,9 @@ and Textual's own built-in themes are available there too.
 
 import csv
 import os
+import time
 
+from rich.style import Style
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -156,6 +158,80 @@ class ImportModal(ModalScreen):
     def on_input_submitted(self, event: Input.Submitted) -> None:
         if event.value.strip():
             self.dismiss(os.path.expanduser(event.value.strip()))
+
+
+def _qr_text(url: str, primary: str) -> Text:
+    """The QR as half-block art: theme-colored modules on white, darkened
+    until cameras can read it (contrast beats style, but we can have both)."""
+    import qrcode
+
+    r, g, b = logo._hex_rgb(primary)
+    while (r + g + b) / 765 > 0.45:
+        r, g, b = int(r * 0.8), int(g * 0.8), int(b * 0.8)
+    dark, light = f"rgb({r},{g},{b})", "rgb(255,255,255)"
+
+    qr = qrcode.QRCode(border=2)
+    qr.add_data(url)
+    qr.make()
+    matrix = qr.get_matrix()
+    if len(matrix) % 2:
+        matrix.append([False] * len(matrix[0]))
+    text = Text()
+    for top, bottom in zip(matrix[::2], matrix[1::2]):
+        for t, btm in zip(top, bottom):
+            text.append("▀", Style(color=dark if t else light, bgcolor=dark if btm else light))
+        text.append("\n")
+    return text
+
+
+class MobileModal(ModalScreen):
+    """Serve the vault to a phone without leaving the TUI. The session lives
+    while this modal is open; Esc ends it."""
+
+    BINDINGS = [Binding("escape", "dismiss", "stop session")]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.server = None
+        self.proc = None
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="modal-box", id="mobile-box"):
+            yield Label("open on phone", classes="modal-title")
+            yield Static("creating your secure link…", id="qr")
+            yield Static("", id="mobile-status")
+            yield Static("esc ends the session", classes="modal-hint")
+
+    def on_mount(self) -> None:
+        self.run_worker(self._start, thread=True)
+
+    def _start(self) -> None:
+        from . import mobile
+
+        try:
+            self.server, self.proc, url = mobile.start_session(
+                VAULT_PATH, on_fetch=self._on_fetch
+            )
+        except Exception as e:  # show any failure in the modal, don't die silently
+            self.app.call_from_thread(
+                self.query_one("#qr", Static).update, f"couldn't start: {e}"
+            )
+            return
+        qr = _qr_text(url, self.app.current_theme.primary)
+        qr.append(f"\n{url}", Style(color=self.app.current_theme.primary))
+        self.app.call_from_thread(self.query_one("#qr", Static).update, qr)
+
+    def _on_fetch(self) -> None:
+        self.app.call_from_thread(
+            self.query_one("#mobile-status", Static).update,
+            f"vault page served to a device at {time.strftime('%H:%M:%S')}",
+        )
+
+    def on_unmount(self) -> None:
+        from . import mobile
+
+        if self.server:
+            mobile.stop_session(self.server, self.proc)
 
 
 class PasswdModal(ModalScreen):
@@ -436,6 +512,10 @@ class PwApp(App):
         background: $surface;
         border: round $primary;
     }
+    #mobile-box {
+        width: auto;
+        max-width: 90%;
+    }
     .modal-title {
         color: $primary;
         text-style: bold;
@@ -485,13 +565,7 @@ class PwApp(App):
         self.push_screen(ImportModal(), done)
 
     def _mobile(self) -> None:
-        from . import mobile
-
-        with self.suspend():  # hand the terminal to the QR + tunnel until Ctrl+C
-            try:
-                mobile.run(VAULT_PATH)
-            except mobile.MobileError as e:
-                input(f"\n{e}\n\npress Enter to return… ")
+        self.push_screen(MobileModal())
 
     def _change_master(self) -> None:
         def done(new: str | None) -> None:
