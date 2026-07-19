@@ -122,12 +122,25 @@ install. The page opens in whatever TUI theme you had set when you generated
 the QR, knight and all (it won't follow later theme changes — scan again for
 that).
 
-Have your own domain? `paladin mobile --url https://vault.you.dev` serves at
-your subdomain instead of a random tunnel, so a bookmark keeps working (the
-path rotates every 30 days on its own). It serves on `127.0.0.1:8787` by
-default — point your reverse proxy or named tunnel there. Set
-`PALADIN_MOBILE_URL` (and optionally `PALADIN_MOBILE_PORT`) and plain
-`paladin mobile` uses it.
+### Want it at your own subdomain?
+
+By default every session gets a fresh random URL. If you own a domain and
+want the QR to always point at *your* address instead, set one variable:
+
+```bash
+export PALADIN_MOBILE_URL=https://passwords.yourdomain.com   # in your ~/.bashrc
+```
+
+and point that subdomain at `127.0.0.1:8787` through whatever you already
+use (reverse proxy, named tunnel — `PALADIN_MOBILE_PORT` changes the port).
+From then on plain `paladin mobile` serves at your subdomain, every time, so
+a phone bookmark keeps working.
+
+To be clear about what this does and doesn't change: a session still only
+lives while `paladin mobile` is running — closing it still ends access, and
+the secret path at the end of the URL still expires every 30 days (your
+bookmark needs refreshing then, on purpose). The only difference is that
+every new session opens at *your* address instead of a random one.
 
 The one thing crossing the internet is the encrypted blob, which is useless
 without the master password that never leaves your phone. The tunnel provider
