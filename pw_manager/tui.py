@@ -381,7 +381,10 @@ class MainScreen(Screen):
         if to_clipboard(self.app.entries[name]["pw"]):
             self.notify(f"password for '{name}' copied", severity="information")
         else:
-            self.notify("no clipboard tool (install wl-clipboard)", severity="error")
+            self.notify(
+                "no clipboard tool found (on Linux: install wl-clipboard)",
+                severity="error",
+            )
 
     def action_new(self) -> None:
         def done(entry: dict | None) -> None:

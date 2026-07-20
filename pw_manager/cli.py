@@ -25,7 +25,15 @@ def generate(length: int = 20) -> str:
 
 def to_clipboard(text: str) -> bool:
     # ponytail: no auto-clear timer; clear manually or copy something else over it
-    for cmd in (["wl-copy"], ["xclip", "-selection", "clipboard"], ["xsel", "-b"]):
+    # linux needs a tool installed; macOS (pbcopy) and Windows (clip) ship theirs
+    for cmd in (
+        ["wl-copy"],
+        ["xclip", "-selection", "clipboard"],
+        ["xsel", "-b"],
+        ["pbcopy"],
+        ["clip"],
+        ["clip.exe"],  # windows tool as seen from inside WSL
+    ):
         if shutil.which(cmd[0]):
             subprocess.run(cmd, input=text.encode(), check=True)
             return True

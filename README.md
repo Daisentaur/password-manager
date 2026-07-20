@@ -248,7 +248,9 @@ and restore from a backup.
 unexpected.
 
 **Password prints instead of copying** — no clipboard tool found. Install
-one: `sudo apt install wl-clipboard` (Wayland) or `xclip` (X11).
+one: `sudo apt install wl-clipboard` (Wayland) or `xclip` (X11). This is a
+Linux-only situation — macOS (`pbcopy`) and Windows (`clip`) have theirs
+built in and are used automatically.
 
 **Unlock feels slow (~1s)** — that's Argon2 doing its job. The delay *is*
 the brute-force resistance. Per command, not per keystroke.

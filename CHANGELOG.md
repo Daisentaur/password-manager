@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.3 — 2026-07-20
+- Fixed: copying only worked on Linux — the clipboard fallback chain never
+  tried macOS's `pbcopy` or Windows's `clip` (both ship with the OS). Mac
+  and Windows users were told to install wl-clipboard, which is a Linux
+  tool. Now covered: wl-copy/xclip/xsel → pbcopy → clip → clip.exe (WSL)
+- The "no clipboard tool" message no longer gives Linux advice to everyone
+
 ## 0.4.2 — 2026-07-19
 - Fixed: the in-TUI QR could wrap inside its modal, scrambling the modules
   into an unscannable mess — the QR text is now unwrappable and the modal is

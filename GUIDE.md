@@ -154,7 +154,7 @@ A few things worth knowing, in plain terms:
 |---|---|
 | "wrong master password" | Almost always a typo — try again slowly |
 | "no vault at ..." | You haven't run `paladin init` yet |
-| The password prints on screen instead of copying | Install a clipboard tool: `sudo apt install wl-clipboard` |
+| The password prints on screen instead of copying | Linux only: install a clipboard tool with `sudo apt install wl-clipboard` (Mac and Windows have one built in) |
 | It thinks for a second before answering | Normal — that pause is the lock being hard to pick |
 
 More detail in the README's troubleshooting section.
