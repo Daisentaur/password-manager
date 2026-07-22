@@ -178,7 +178,9 @@ table:
 - **e** edits the selected entry — everything is prefilled; leave the
   password box empty to keep the old password
 - **d** deletes the selected entry (asks first)
-- **t** opens the theme picker — pick with arrows, Enter applies, and your
+- **t** opens the theme picker — your current theme has a ✓, and arrowing
+  through the list previews each one live so you can see it before deciding;
+  Enter keeps it, Esc goes back to what you had. Your
   choice is remembered next time
 - **q** quits
 

@@ -134,16 +134,39 @@ async def run() -> None:
         await pilot.press("escape")
         await pilot.pause()
 
-        # themes: default, switch persists, fresh app remembers
+        # theme picker: current marked + preselected, preview on move,
+        # esc reverts, enter commits + persists
+        from textual.widgets import OptionList
+
+        from pw_manager.tui import ThemeModal
+
         assert app.theme == "muted-slate"
-        app.theme = "dawn"
+        app.screen.action_theme()
         await pilot.pause()
-        assert open(tui_mod.THEME_FILE).read() == "dawn"
+        assert isinstance(app.screen, ThemeModal)
+        ol = app.screen.query_one(OptionList)
+        cur = ol.get_option_at_index(ol.highlighted)
+        assert cur.id == "muted-slate" and "✓" in str(cur.prompt)
+        await pilot.press("down")
+        await pilot.pause()
+        assert app.theme != "muted-slate", "cursor move should preview"
+        await pilot.press("escape")
+        await pilot.pause()
+        assert app.theme == "muted-slate", "escape should revert the preview"
+
+        app.screen.action_theme()
+        await pilot.pause()
+        await pilot.press("down")
+        await pilot.pause()
+        chosen = app.theme
+        await pilot.press("enter")
+        await pilot.pause()
+        assert app.theme == chosen and open(tui_mod.THEME_FILE).read() == chosen
 
     app2 = PwApp()
     async with app2.run_test() as pilot:
         await pilot.pause()
-        assert app2.theme == "dawn"
+        assert app2.theme == chosen  # fresh app remembers the committed choice
 
     print("TUI checks passed")
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.4 — 2026-07-22
+- The theme picker (`t`) now marks your current theme with a ✓ and starts
+  the cursor on it, and previews each theme live as you arrow through —
+  Enter keeps it, Esc reverts to what you had (like monkeytype's picker)
+
 ## 0.4.3 — 2026-07-20
 - Fixed: copying only worked on Linux — the clipboard fallback chain never
   tried macOS's `pbcopy` or Windows's `clip` (both ship with the OS). Mac

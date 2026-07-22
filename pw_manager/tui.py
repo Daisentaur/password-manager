@@ -17,7 +17,8 @@ from textual.command import DiscoveryHit, Hit, Hits, Provider
 from textual.containers import Vertical
 from textual.screen import ModalScreen, Screen
 from textual.theme import Theme
-from textual.widgets import DataTable, Footer, Input, Label, Static
+from textual.widgets import DataTable, Footer, Input, Label, OptionList, Static
+from textual.widgets.option_list import Option
 
 from . import logo, vault
 from .cli import VAULT_PATH, generate, import_csv, to_clipboard
@@ -277,6 +278,45 @@ class PasswdModal(ModalScreen):
         self.dismiss(new)
 
 
+class ThemeModal(ModalScreen):
+    """Theme picker: cursor starts on the current theme, moving it previews
+    the theme live, Enter keeps it, Esc reverts to what you had."""
+
+    BINDINGS = [Binding("escape", "cancel", "cancel")]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.original = None
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="modal-box", id="theme-box"):
+            yield Label("theme", classes="modal-title")
+            yield OptionList(id="theme-list")
+            yield Static("↑↓ preview · enter keeps · esc cancels", classes="modal-hint")
+
+    def on_mount(self) -> None:
+        self.original = self.app.theme
+        names = sorted(self.app.available_themes)
+        option_list = self.query_one(OptionList)
+        for name in names:
+            label = f"{name}  ✓" if name == self.original else name
+            option_list.add_option(Option(label, id=name))
+        option_list.highlighted = names.index(self.original)  # start on current
+
+    def on_option_list_option_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        if event.option.id:
+            self.app.theme = event.option.id  # live preview
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        if event.option.id:
+            self.app.theme = event.option.id  # commit (persists via theme signal)
+        self.dismiss()
+
+    def action_cancel(self) -> None:
+        self.app.theme = self.original  # revert the preview
+        self.dismiss()
+
+
 class ConfirmModal(ModalScreen):
     """y/n confirmation."""
 
@@ -308,7 +348,7 @@ class MainScreen(Screen):
         Binding("e", "edit", "edit"),
         Binding("d", "delete", "delete"),
         Binding("slash", "search", "search"),
-        Binding("t", "app.change_theme", "theme"),
+        Binding("t", "theme", "theme"),
         Binding("escape", "clear_search", show=False),
         Binding("q", "quit", "quit"),
     ]
@@ -431,6 +471,9 @@ class MainScreen(Screen):
                 self.notify(f"removed '{name}'")
 
         self.app.push_screen(ConfirmModal(f"delete '{name}'?"), done)
+
+    def action_theme(self) -> None:
+        self.app.push_screen(ThemeModal())
 
     def action_search(self) -> None:
         self.query_one("#search", Input).focus()

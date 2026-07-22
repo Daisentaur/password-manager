@@ -58,8 +58,10 @@ changing the master password all live there, along with others.
 
 ![the command palette](assets/palette.gif)
 
-And themes. `t` opens the theme picker; the bundled ones — muted-slate (default),
-dawn, matrix — are lifted with love from
+And themes. `t` opens the theme picker — your current one is marked and
+preselected, and arrowing through them previews each live before you commit
+(Enter keeps it, Esc puts back what you had). The bundled ones — muted-slate
+(default), dawn, matrix — are lifted with love from
 [tuxedo](https://github.com/webstonehq/tuxedo)'s palettes, and all of
 Textual's built-ins are in there too. Your pick sticks across runs. Even the
 knight on the unlock screen dresses to match your theme, try it ;)

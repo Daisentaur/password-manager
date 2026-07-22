@@ -15,28 +15,16 @@ Enter
 Sleep 2.5s
 Show
 
+Sleep 1s
+Type "t"
 Sleep 1.5s
-Type "t"
-Sleep 800ms
-Type@120ms "dawn"
-Sleep 600ms
-Enter
-Sleep 2.2s
-Type "t"
-Sleep 800ms
-Type@120ms "matrix"
-Sleep 600ms
-Enter
-Sleep 2.2s
-Type "t"
-Sleep 800ms
-Type@120ms "nord"
-Sleep 600ms
-Enter
-Sleep 2.2s
-Type "t"
-Sleep 800ms
-Type@120ms "muted"
-Sleep 600ms
-Enter
-Sleep 2.5s
+Down
+Sleep 1.2s
+Down
+Sleep 1.2s
+Down
+Sleep 1.2s
+Up
+Sleep 1.2s
+Escape
+Sleep 1.5s
