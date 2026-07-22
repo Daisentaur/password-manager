@@ -154,6 +154,23 @@ async def run() -> None:
         await pilot.pause()
         assert app.theme == "muted-slate", "escape should revert the preview"
 
+        # ANSI themes use color *names* not hex — previewing them must not
+        # crash the knight-tinting (regression: 0.4.4 bricked launch)
+        app.screen.action_theme()
+        await pilot.pause()
+        from textual.widgets import OptionList as _OL
+
+        ol2 = app.screen.query_one(_OL)
+        ansi_idx = next(
+            i for i in range(ol2.option_count)
+            if ol2.get_option_at_index(i).id in ("ansi-dark", "ansi-light")
+        )
+        ol2.highlighted = ansi_idx  # preview an ansi theme
+        await pilot.pause()
+        assert app.theme in ("ansi-dark", "ansi-light")  # applied, no crash
+        await pilot.press("escape")
+        await pilot.pause()
+
         app.screen.action_theme()
         await pilot.pause()
         await pilot.press("down")

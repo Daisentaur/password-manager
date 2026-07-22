@@ -130,6 +130,10 @@ def _theme_colors() -> dict:
         registry = {t.name: t for t in TUXEDO_THEMES}
         registry.update(BUILTIN_THEMES)
         cs = registry[name].to_color_system().generate()
+        # ANSI themes resolve to names like 'ansi_blue', not hex — the browser
+        # can't use those and the knight can't tint from them, so fall back
+        if not str(cs.get("background", "")).startswith("#"):
+            return default
         return {**default, **cs}
     except (OSError, KeyError, ImportError):
         return default

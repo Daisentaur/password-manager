@@ -103,6 +103,8 @@ class UnlockScreen(Screen):
             self.query_one("#master", Input).clear()
             return
         self.app.master = event.value
+        # stop repainting the (now-hidden) unlock knight on every theme change
+        self.app.theme_changed_signal.unsubscribe(self)
         self.app.push_screen(MainScreen())
 
 
@@ -167,7 +169,8 @@ def _qr_text(url: str, primary: str) -> tuple[Text, int]:
     must give the widget exactly that width: a wrapped QR is a dead QR."""
     import qrcode
 
-    r, g, b = logo._hex_rgb(primary)
+    rgb = logo._hex_rgb(primary) or (0, 0, 0)  # ansi themes → plain black QR
+    r, g, b = rgb
     while (r + g + b) / 765 > 0.45:
         r, g, b = int(r * 0.8), int(g * 0.8), int(b * 0.8)
     dark, light = f"rgb({r},{g},{b})", "rgb(255,255,255)"

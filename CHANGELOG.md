@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.5 — 2026-07-22
+- Fixed a crash from 0.4.4: previewing an ANSI theme (ansi-dark/ansi-light)
+  blew up the knight-tinting, because those themes use color *names* like
+  `ansi_blue` instead of hex. Worse, if you'd left an ANSI theme selected,
+  the app crashed on launch. The knight now renders plain for ANSI themes,
+  the phone QR falls back to black, and the mobile page uses safe defaults —
+  everywhere that tints from a theme color now tolerates non-hex ones
+- Fixed a latent leak the crash exposed: the unlock screen kept repainting
+  its (hidden) knight on every theme change after you'd unlocked
+
 ## 0.4.4 — 2026-07-22
 - The theme picker (`t`) now marks your current theme with a ✓ and starts
   the cursor on it, and previews each theme live as you arrow through —

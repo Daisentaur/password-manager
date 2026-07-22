@@ -75,9 +75,18 @@ def _tinted(pixel, tint, accent):
     return tuple(int(c * lum) for c in base)
 
 
-def _hex_rgb(color: str) -> tuple:
+def _hex_rgb(color: str | None) -> tuple | None:
+    """Parse #rrggbb to (r,g,b). Returns None for anything that isn't hex —
+    ANSI themes use names like 'ansi_blue', and those just mean 'no tint'."""
+    if not color:
+        return None
     color = color.lstrip("#")
-    return tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+    if len(color) != 6:
+        return None
+    try:
+        return tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return None
 
 
 def rich_text(tint: str | None = None, accent: str | None = None) -> Text:
